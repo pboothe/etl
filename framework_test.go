@@ -3,23 +3,18 @@ package framework_test
 
 import (
 	"etl"
-	"fmt"
 	"testing"
 )
 
 func benchmarkMD5(numDigesters int, b *testing.B) {
         for n := 0; n < b.N; n++ {
-		_, err := framework.ManyBig(4, numDigesters, 10000, "small")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		framework.ManyBig(4, numDigesters, 10000, "small")
         }
 }
 
 
 func Benchmark1(b *testing.B) { benchmarkMD5(1, b) }
-func Benchmark10(b *testing.B) { benchmarkMD5(10, b) }
+func Benchmark4(b *testing.B) { benchmarkMD5(4, b) }
 func Benchmark12(b *testing.B) { benchmarkMD5(12, b) }
 
 /*

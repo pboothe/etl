@@ -5,9 +5,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"runtime"
-	"sort"
 	"sync"
 )
 
@@ -29,17 +26,20 @@ type result struct {
 
 // digester reads data blocks and sends digests
 // on c until either data or done is closed.
-func digester(done <-chan struct{}, data <-chan []byte, c chan<- result) {
+func digester(done <-chan struct{}, data <-chan []byte, c chan<- bool) {
 	for block := range data {
+		foobar := md5.Sum(block)
+		foobar[1] += 1
 		select {
-		case c <- result{"foobar", md5.Sum(block), len(block)}:
+		case c <- true:
+		//case c <- result{"foobar", md5.Sum(block), len(block)}:
 		case <-done:
 			return
 		}
 	}
 }
 
-func ManyBig(numSources int, numDigesters int, numRecords int, fname string) (map[string]int, error) {
+func ManyBig(numSources int, numDigesters int, numRecords int, fname string) {
 	// closes the done channel when it returns
 	done := make(chan struct{})
 	defer close(done)
@@ -47,12 +47,12 @@ func ManyBig(numSources int, numDigesters int, numRecords int, fname string) (ma
 	block, err := ioutil.ReadFile(fname)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return
 	}
 
 	var source_wg sync.WaitGroup
 	source_wg.Add(numSources)
-	data := make(chan []byte, 50)  // data output channel, buffer 10.
+	data := make(chan []byte, 50)  // data output channel, buffer 50.
 	for s := 0; s < numSources; s++ {
 		go func() {
 			replicate(data, numRecords/numSources, block)
@@ -65,7 +65,7 @@ func ManyBig(numSources int, numDigesters int, numRecords int, fname string) (ma
 	}()
 
 	// Start a fixed number of goroutines to read and digest files.
-	c := make(chan result)
+	c := make(chan bool)
 	var wg sync.WaitGroup
 	wg.Add(numDigesters)
 	for i := 0; i < numDigesters; i++ {
@@ -79,28 +79,10 @@ func ManyBig(numSources int, numDigesters int, numRecords int, fname string) (ma
 		close(c)
 	}()
 
-	m := make(map[string]int)
-	for r := range c {
-		m[r.path] = r.size
-	}
-	return m, nil
-}
-
-func main() {
-	fmt.Println("max procs", runtime.GOMAXPROCS(0))
-	fmt.Println("cpus ", runtime.NumCPU())
-	m, err := ManyBig(10, 20, 1000, os.Args[1])
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	var paths []string
-	for path := range m {
-		paths = append(paths, path)
-	}
-	sort.Strings(paths)
-	for _, path := range paths {
-		fmt.Printf("%d  %s\n", m[path], path)
-	}
+	//	m := make(map[string]int)
+	//for r := range c {
+	//	m[r.path] = r.size
+	//}
+	//return m, nil
 }
 
