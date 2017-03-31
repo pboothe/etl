@@ -14,26 +14,14 @@ func replicate(out chan<- []byte, count int, block []byte) {
 	}
 }
 
-// A result is the product of reading and summing a file using MD5.
-type result struct {
-	path string
-	sum  [md5.Size]byte
-	size int
-}
-
-// digester reads data blocks and sends digests
-// on c until either data or done is closed.
-func digester(done <-chan struct{}, data <-chan []byte) { //, c chan<- bool) {
+// digester reads data blocks and sends digests on c
+func digester(data <-chan []byte, c chan<- [md5.Size]byte) {
 	for block := range data {
-		md5.Sum(block)
+		c <- md5.Sum(block)
 	}
 }
 
 func ManyBig(numSources int, numDigesters int, numRecords int, block []byte) {
-	// closes the done channel when it returns
-	done := make(chan struct{})
-	defer close(done)
-
 	var source_wg sync.WaitGroup
 	source_wg.Add(numSources)
 	data := make(chan []byte, 50)  // data output channel, buffer 50.
@@ -43,30 +31,32 @@ func ManyBig(numSources int, numDigesters int, numRecords int, block []byte) {
 			source_wg.Done()
 		}()
 	}
+
+	// Start a fixed number of goroutines to read and digest files.
+	c := make(chan [md5.Size]byte)
+	var digest_wg sync.WaitGroup
+	digest_wg.Add(numDigesters)
+	for i := 0; i < numDigesters; i++ {
+		go func() {
+			digester(data, c)
+			digest_wg.Done()	
+		}()
+	}
+
 	go func() {
 		source_wg.Wait()
 		close(data)
 	}()
 
-	// Start a fixed number of goroutines to read and digest files.
-	//c := make(chan bool)
-	var wg sync.WaitGroup
-	wg.Add(numDigesters)
-	for i := 0; i < numDigesters; i++ {
-		go func() {
-			digester(done, data) //, c)
-			wg.Done()
-		}()
-	}
-//	go func() {
-		wg.Wait()
-//		close(c)  // signal to all digesters to quit.
-//	}()
+	go func() {
+		digest_wg.Wait()
+		close(c)
+	}()
 
-	//	m := make(map[string]int)
-	//for r := range c {
-	//	m[r.path] = r.size
-	//}
-	//return m, nil
+	// Consume the md5 values.
+	count := 0
+	for _ = range c {
+		count += 1
+	}
 }
 
