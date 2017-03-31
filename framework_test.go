@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
+
 func benchmarkMD5(numDigesters int, b *testing.B) {
-        for n := 0; n < b.N; n++ {
-		framework.ManyBig(4, numDigesters, 10000, "small")
-        }
+	var data [11000]byte
+	framework.ManyBig(4, numDigesters, b.N, data[:])
 }
 
 
