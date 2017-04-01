@@ -1,15 +1,14 @@
 
-package framework_test
+package framework
 
 import (
-	"etl"
 	"testing"
 )
 
 
 func benchmarkMD5(numDigesters int, b *testing.B) {
 	var data [11000]byte
-	framework.ManyBig(4, numDigesters, b.N, data[:])
+	ManyBig(4, numDigesters, b.N, data[:])
 }
 
 
