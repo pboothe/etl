@@ -2,7 +2,7 @@
 package framework_test
 
 import (
-	"etl/framework"
+	"github.com/m-lab/etl/framework"
 	"testing"
 )
 
