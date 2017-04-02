@@ -1,4 +1,5 @@
 language: go
 
 script:
+- go list all
 - go test -v -bench=. -benchmem
