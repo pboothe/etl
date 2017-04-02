@@ -1,5 +1,7 @@
 language: go
 
-script:
+before_install:
 - go list all
+
+script:
 - go test -v -bench=. -benchmem
