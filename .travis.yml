@@ -4,4 +4,4 @@ before_install:
 - go list all
 
 script:
-- go test -v -bench=. -benchmem
+- go test -v ./... -bench=. -benchmem
