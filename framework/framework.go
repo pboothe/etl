@@ -40,21 +40,19 @@ import (
 )
 
 type Driver interface {
-
 }
 
 // Reader is a source of tests.
 type Reader interface {
-  // Returns test as byte slice, or nil if no more tests.
-  NextTest() []byte
+	// Returns test as byte slice, or nil if no more tests.
+	NextTest() []byte
 }
-
 
 // replicate starts a goroutine to send 'count' copies of the
 // data block on the data channel.
 func replicate(out chan<- []byte, count int, block []byte) {
 	for i := 0; i < count; i++ {
-		out <- block  // This copies only the slice, not the data
+		out <- block // This copies only the slice, not the data
 	}
 }
 
@@ -68,7 +66,7 @@ func digester(data <-chan []byte, c chan<- [md5.Size]byte) {
 func ManyBig(numSources int, numDigesters int, numRecords int, block []byte) {
 	var source_wg sync.WaitGroup
 	source_wg.Add(numSources)
-	data := make(chan []byte, 50)  // data output channel, buffer 50.
+	data := make(chan []byte, 50) // data output channel, buffer 50.
 	for s := 0; s < numSources; s++ {
 		go func() {
 			replicate(data, numRecords/numSources, block)
@@ -83,7 +81,7 @@ func ManyBig(numSources int, numDigesters int, numRecords int, block []byte) {
 	for i := 0; i < numDigesters; i++ {
 		go func() {
 			digester(data, c)
-			digest_wg.Done()	
+			digest_wg.Done()
 		}()
 	}
 
@@ -103,4 +101,3 @@ func ManyBig(numSources int, numDigesters int, numRecords int, block []byte) {
 		count += 1
 	}
 }
-

@@ -1,4 +1,3 @@
-
 package framework_test
 
 import (
@@ -6,15 +5,13 @@ import (
 	"testing"
 )
 
-
 func benchmarkMD5(numDigesters int, b *testing.B) {
 	var data [11000]byte
 	framework.ManyBig(4, numDigesters, b.N, data[:])
 }
 
-
-func Benchmark1(b *testing.B) { benchmarkMD5(1, b) }
-func Benchmark4(b *testing.B) { benchmarkMD5(4, b) }
+func Benchmark1(b *testing.B)  { benchmarkMD5(1, b) }
+func Benchmark4(b *testing.B)  { benchmarkMD5(4, b) }
 func Benchmark12(b *testing.B) { benchmarkMD5(12, b) }
 
 /*
@@ -24,4 +21,4 @@ func Benchmark12(b *testing.B) { benchmarkMD5(12, b) }
 *
 *
 *
-*/
+ */
